@@ -20,6 +20,8 @@ void add_history(char *unused){};
 #else
 #include <editline/readline.h>
 #endif
+long eval_op(long, char *, long);
+long eval(mpc_ast_t *t);
 int main() {
 
   /* Defining some parsers */
@@ -48,7 +50,8 @@ murlisp  : /^/<operator> <expr> + /$/;              ",
     mpc_result_t r;
     if (mpc_parse("<stdin>", input, Murlisp, &r)) {
       /* On success print the AST */
-      mpc_ast_print(r.output);
+      long result = eval(r.output);
+      printf("%li\n", result);
       mpc_ast_delete(r.output);
     } else {
       mpc_err_print(r.error);
@@ -59,5 +62,48 @@ murlisp  : /^/<operator> <expr> + /$/;              ",
   }
 
   mpc_cleanup(4, Number, Operator, Expr, Murlisp);
+  return 0;
+}
+
+/* a recursive function to evaluate the syntax tree
+ * the base  case is a number cause if a node i a number it will not have any
+ * children if a node is tagged expr we need to look at it's second child for
+ * the operator causes the first one is a '(' */
+
+long eval(mpc_ast_t *t) {
+  /* if tagged as a number return it directly (base case) */
+  if (strstr(t->tag, "number")) {
+    return atoi(t->contents);
+  }
+
+  /* the operator is always the second child */
+  char *op = t->children[1]->contents;
+
+  /* we store the third child in x */
+  long x = eval(t->children[2]);
+
+  /* iterate the remaining children and combining */
+  int i = 3;
+  while (strstr(t->children[i]->tag, "expr")) {
+    x = eval_op(x, op, eval(t->children[i]));
+    i++;
+  }
+
+  return x;
+}
+
+long eval_op(long x, char *op, long y) {
+  if (strcmp(op, "+") == 0) {
+    return x + y;
+  }
+  if (strcmp(op, "*") == 0) {
+    return x * y;
+  }
+  if (strcmp(op, "-") == 0) {
+    return x - y;
+  }
+  if (strcmp(op, "/") == 0) {
+    return x / y;
+  }
   return 0;
 }
