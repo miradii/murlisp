@@ -31,8 +31,8 @@ int main() {
   mpc_parser_t *Murlisp = mpc_new("murlisp");
 
   mpca_lang(MPCA_LANG_DEFAULT, "                                              \
-number   : /-?[0-9]+/;                          \
-operator : '+' | '-' | '*' | '/';                \
+number   : /-?[0-9]+/;                                   \
+operator : '+' | '-' | '*' | '/' | '%';                \
 expr     : <number> | '(' <operator> <expr>+ ')'; \
 murlisp  : /^/<operator> <expr> + /$/;              ",
             Number, Operator, Expr, Murlisp);
@@ -116,6 +116,9 @@ lval eval_op(lval x, char *op, lval y) {
   if (strcmp(op, "/") == 0) {
     return y.num == 0 ? lval_err(LERR_DIV_ZERO) : lval_num(x.num + y.num);
   }
+  if (strcmp(op, "%") == 0) {
+    return lval_num((long)x.num % (long)y.num);
+  }
   return lval_err(LERR_BAD_OP);
 }
 
@@ -136,7 +139,7 @@ lval lval_err(int x) {
 void lval_print(lval v) {
   switch (v.type) {
   case LVAL_NUM:
-    printf("%li", v.num);
+    printf("%ld", v.num);
     break;
 
   case LVAL_ERR:
