@@ -1,7 +1,7 @@
 #include "../include/mpc.h"
 
 /* an Enum type representing possible lval types */
-enum { LVAL_ERR, LVAL_NUM, LVAL_SYM, LVAL_SEXPR };
+enum { LVAL_ERR, LVAL_NUM, LVAL_SYM, LVAL_SEXPR, LVAL_QEXPR };
 
 /* create enumeration of possible error types */
 enum { LERR_DIV_ZERO, LERR_BAD_OP, LERR_BAD_NUM };
@@ -58,3 +58,16 @@ lval *lval_take(lval *v, int i);
 
 /* this evaluates the operation in an expression list */
 lval *builtin_op(lval *, char *);
+
+/* Constructor for qxpression type lval */
+lval *lval_qexpr(void);
+
+lval *lval_join(lval *x, lval *y);
+
+lval *builtin(lval *a, char *func);
+lval *builtin_join(lval *a);
+lval *builtin_eval(lval *a);
+lval *builtin_list(lval *a);
+lval *builtin_tail(lval *a);
+lval *builtin_head(lval *a);
+lval *lval_qexpr(void);
