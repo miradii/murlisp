@@ -51,7 +51,7 @@ lval *lenv_get(lenv *e, lval *k);
 lval *lval_num(long x);
 
 /* Create a pointer to a new error type lval*/
-lval *lval_err(char *m);
+lval *lval_err(char *fmt, ...);
 
 /* Construct a pointer to a symbol type lval */
 lval *lval_sym(char *s);
@@ -90,6 +90,8 @@ lval *lval_eval(lenv *, lval *);
 lval *lval_eval_sexpr(lenv *, lval *);
 
 lval *lval_take(lval *v, int i);
+
+char *ltype_name(int t);
 
 /* this evaluates the operation in an expression list */
 lval *builtin_op(lenv *e, lval *, char *);
