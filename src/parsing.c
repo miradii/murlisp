@@ -114,6 +114,7 @@ void lenv_put(lenv *e, lval *k, lval *v) {
    * value else add the new value */
   for (int i = 0; i < e->count; i++) {
     if (strcmp(e->syms[i], k->sym) == 0) {
+      printf("here");
       lval_del(e->vals[i]);
       e->vals[i] = lval_copy(v);
       return;
@@ -549,10 +550,34 @@ lval *lval_join(lenv *e, lval *x, lval *y) {
 /* arithmetic built in functions */
 lval *builtin_add(lenv *e, lval *a) { return builtin_op(e, a, "+"); }
 lval *builtin_min(lenv *e, lval *a) { return builtin_op(e, a, "-"); }
-
 lval *builtin_mul(lenv *e, lval *a) { return builtin_op(e, a, "*"); }
-
 lval *builtin_div(lenv *e, lval *a) { return builtin_op(e, a, "/"); }
+
+/* built in def function */
+lval *builtin_def(lenv *e, lval *a) {
+  LASSERT(a, a->cell[0]->type == LVAL_QEXPR,
+          "Function 'def' passed incorrect type");
+
+  // first argument is symbol list
+  lval *syms = a->cell[0];
+
+  /* ensure all elemnts of first list are symbols */
+  for (int i = 0; i < syms->count; i++) {
+    LASSERT(a, syms->cell[i]->type == LVAL_SYM,
+            "Function 'def' cannot define non-symbols");
+  }
+  /* check correct number of symbols to values */
+  LASSERT(a, syms->count == a->count - 1,
+          "Function 'def' cannot define incorrect number of values to symbols");
+
+  /* Assign copies of values to symbols */
+  for (int i = 0; i < syms->count; i++) {
+    lenv_put(e, syms->cell[i], a->cell[i + 1]);
+  }
+
+  lval_del(a);
+  return lval_sexpr();
+}
 
 /* built in lookup */
 lval *builtin(lenv *e, lval *a, char *func) {
@@ -583,6 +608,9 @@ lval *builtin(lenv *e, lval *a, char *func) {
   if (strcmp("/", func) == 0) {
     return builtin_div(e, a);
   }
+  if (strcmp("def", func) == 0) {
+    return builtin_def(e, a);
+  }
 
   lval_del(a);
   return lval_err("Unknown function!");
@@ -599,21 +627,17 @@ void lenv_add_builtin(lenv *e, char *name, lbuiltin func) {
 void lenv_add_builtins(lenv *e) {
   /* List Functions */
   lenv_add_builtin(e, "eval", builtin_eval);
-  printf("%d", e->count);
   lenv_add_builtin(e, "join", builtin_join);
-  printf("%d", e->count);
   lenv_add_builtin(e, "list", builtin_list);
-  printf("%d", e->count);
   lenv_add_builtin(e, "head", builtin_head);
-  printf("%d", e->count);
   lenv_add_builtin(e, "tail", builtin_tail);
 
   /* Arithmetic functions */
   lenv_add_builtin(e, "+", builtin_add);
-  printf("%d", e->count);
   lenv_add_builtin(e, "-", builtin_min);
-  printf("%d", e->count);
   lenv_add_builtin(e, "*", builtin_mul);
-  printf("%d", e->count);
   lenv_add_builtin(e, "/", builtin_div);
+
+  /* other built in functions */
+  lenv_add_builtin(e, "def", builtin_def);
 }

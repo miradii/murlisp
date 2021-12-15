@@ -109,6 +109,7 @@ lval *builtin_add(lenv *e, lval *a);
 lval *builtin_min(lenv *e, lval *a);
 lval *builtin_mul(lenv *e, lval *a);
 lval *builtin_div(lenv *e, lval *a);
+lval *builtin_def(lenv *e, lval *a);
 lval *lval_qexpr(void);
 
 /* add a function to an environment  */
