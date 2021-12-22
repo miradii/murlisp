@@ -19,18 +19,26 @@ enum { LERR_DIV_ZERO, LERR_BAD_OP, LERR_BAD_NUM };
 /* declare new lval struct */
 struct lval {
   int type;
+
+  /* Basic */
   long num;
-  /* error and symbol types have some string data */
   char *err;
   char *sym;
-  lbuiltin fun;
-  /* Count and pointer to a list of "lval*" */
+
+  /* Function */
+  lbuiltin builtin;
+  lenv *env;
+  lval *formals;
+  lval *body;
+
+  /* Expression */
   int count;
   struct lval **cell;
 };
 
 /* struct representing the environment */
 struct lenv {
+  lenv *par;
   int count;
   char **syms;
   lval **vals;
@@ -47,6 +55,12 @@ void lenv_put(lenv *e, lval *k, lval *v);
 /* a function for getting variables from an environment */
 lval *lenv_get(lenv *e, lval *k);
 
+/* a function for copying environments */
+lenv *lenv_copy(lenv *e);
+
+/* a function to add a variable to the global envrionment */
+void lenv_def(lenv *e, lval *k, lval *v);
+
 /* Create a pointer to a new number type lval */
 lval *lval_num(long x);
 
@@ -61,6 +75,9 @@ lval *lval_sexpr(void);
 
 /* Construct a pointer to a func type lval */
 lval *lval_func(lbuiltin);
+
+/* Constructor for user defined lval functions */
+lval *lval_lambda(lval *formals, lval *body);
 
 lval *lval_read(mpc_ast_t *t);
 
@@ -111,8 +128,11 @@ lval *builtin_add(lenv *e, lval *a);
 lval *builtin_min(lenv *e, lval *a);
 lval *builtin_mul(lenv *e, lval *a);
 lval *builtin_div(lenv *e, lval *a);
-lval *builtin_def(lenv *e, lval *a);
+lval *builtin_lambda(lenv *e, lval *a);
 lval *lval_qexpr(void);
+lval *builtin_def(lenv *e, lval *a);
+lval *builtin_put(lenv *e, lval *a);
+lval *builtin_var(lenv *e, lval *a, char *func);
 
 /* add a function to an environment  */
 void lenv_add_builtin(lenv *e, char *name, lbuiltin func);
