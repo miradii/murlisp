@@ -11,7 +11,15 @@ typedef struct lval lval;
 typedef lval *(*lbuiltin)(lenv *, lval *);
 
 /* an Enum type representing possible lval types */
-enum { LVAL_ERR, LVAL_NUM, LVAL_SYM, LVAL_SEXPR, LVAL_QEXPR, LVAL_FUN };
+enum {
+  LVAL_ERR,
+  LVAL_NUM,
+  LVAL_STR,
+  LVAL_SYM,
+  LVAL_SEXPR,
+  LVAL_QEXPR,
+  LVAL_FUN,
+};
 
 /* create enumeration of possible error types */
 enum { LERR_DIV_ZERO, LERR_BAD_OP, LERR_BAD_NUM };
@@ -24,6 +32,7 @@ struct lval {
   long num;
   char *err;
   char *sym;
+  char *str;
 
   /* Function */
   lbuiltin builtin;
@@ -64,6 +73,9 @@ void lenv_def(lenv *e, lval *k, lval *v);
 /* Create a pointer to a new number type lval */
 lval *lval_num(long x);
 
+/* Create a pointer to a string type lval */
+lval *lval_str(char *s);
+
 /* Create a pointer to a new error type lval*/
 lval *lval_err(char *fmt, ...);
 
@@ -88,6 +100,9 @@ lval *lval_copy(lval *v);
 /* Print an "lval" */
 void lval_print(lval *v);
 
+/* Print an lval string */
+void lval_print_str(lval *v);
+
 /* Print lval expr */
 void print_lval_expr(lval *, char, char);
 
@@ -95,6 +110,8 @@ void print_lval_expr(lval *, char, char);
 void lval_println(lval *v);
 
 lval *lval_read_num(mpc_ast_t *t);
+
+lval *lval_read_str(mpc_ast_t *t);
 
 /* add an item to the expression list */
 lval *lval_add(lval *v, lval *x);
