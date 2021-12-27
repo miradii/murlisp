@@ -60,11 +60,29 @@ int main(int argc, char **argv) {
   ",
             Number, Symbol, String, Comment, Sexpr, Qexpr, Expr, Murlisp);
 
-  puts("Murlisp Version 0.0.0.0.8");
-  puts("Press Ctrl+c to Exit\n");
-
   lenv *e = lenv_new();
   lenv_add_builtins(e);
+
+  if (argc >= 2) {
+
+    // loop over each supplied filename
+    for (int i = 0; i < argc; i++) {
+      // argument list with a single argument
+      lval *args = lval_add(lval_sexpr(), lval_str(argv[i]));
+
+      // pass to builtin load and get the result
+      lval *x = builtin_load(e, args);
+
+      // if the result is an error be sure to print it
+      if (x->type == LVAL_ERR) {
+        lval_println(x);
+      }
+      lval_del(x);
+    }
+  }
+
+  puts("Murlisp Version 0.0.0.0.8");
+  puts("Press Ctrl+c to Exit\n");
 
   while (1) {
 
@@ -785,6 +803,72 @@ void lenv_add_builtin(lenv *e, char *name, lbuiltin func) {
   lval_del(v);
 }
 
+lval *builtin_load(lenv *e, lval *a) {
+  LASSERT_NUM("load", a, 1);
+  LASSERT_TYPE("load", a, 1, LVAL_STR);
+
+  // Parse file given by string name
+  mpc_result_t r;
+  if (mpc_parse_contents(a->cell[0]->str, Murlisp, &r)) {
+
+    // read contetns
+    lval *expr = lval_read(r.output);
+    mpc_ast_delete(r.output);
+
+    // evaluate each expression
+    while (expr->count) {
+      lval *x = lval_eval(e, lval_pop(expr, 0));
+      // if evaluation leads to error print it
+
+      if (x->type == LVAL_ERR) {
+        lval_println(x);
+      };
+      lval_del(x);
+    }
+
+    // Delete expressions and arguments
+    lval_del(expr);
+    lval_del(a);
+
+    // return empty list
+    return lval_sexpr();
+
+  } else {
+    // Get parse error as string
+    char *err_msg = mpc_err_string(r.error);
+    mpc_err_delete(r.error);
+
+    // Create new error message using it
+    lval *err = lval_err("Could not load Library %s:", err_msg);
+    free(err_msg);
+    lval_del(a);
+
+    return err;
+  }
+}
+
+lval *builtin_print(lenv *e, lval *a) {
+  // Print each argument followed by a space
+  for (int i = 0; i < a->count; i++) {
+    lval_print(a->cell[i]);
+    putchar(' ');
+  }
+
+  putchar('\n');
+  lval_del(a);
+  return lval_sexpr();
+}
+
+lval *builtin_error(lenv *e, lval *a) {
+  LASSERT_NUM("error", a, 1);
+  LASSERT_TYPE("error", a, 0, LVAL_STR);
+
+  lval *err = lval_err(a->cell[0]->str);
+
+  lval_del(a);
+  return err;
+}
+
 /* builtin ordering */
 lval *builtin_gt(lenv *e, lval *a) { return builtin_ord(e, a, ">"); }
 lval *builtin_lt(lenv *e, lval *a) { return builtin_ord(e, a, "<"); }
@@ -859,6 +943,12 @@ void lenv_add_builtins(lenv *e) {
   /* Variable Functions */
   lenv_add_builtin(e, "def", builtin_def);
   lenv_add_builtin(e, "=", builtin_put);
+
+  /* String Functions */
+
+  lenv_add_builtin(e, "load", builtin_load);
+  lenv_add_builtin(e, "error", builtin_error);
+  lenv_add_builtin(e, "print", builtin_print);
 
   /* List Functions */
   lenv_add_builtin(e, "list", builtin_list);

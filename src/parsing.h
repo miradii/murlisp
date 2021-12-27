@@ -138,6 +138,7 @@ lval *lval_join(lenv *e, lval *x, lval *y);
 int lval_eq(lval *x, lval *y);
 
 lval *builtin(lenv *e, lval *a, char *func);
+lval *builtin_load(lenv *e, lval *a);
 lval *builtin_join(lenv *e, lval *a);
 lval *builtin_eval(lenv *e, lval *a);
 lval *builtin_list(lenv *e, lval *a);
@@ -152,6 +153,7 @@ lval *lval_qexpr(void);
 lval *builtin_def(lenv *e, lval *a);
 lval *builtin_put(lenv *e, lval *a);
 lval *builtin_var(lenv *e, lval *a, char *func);
+lval *builtin_print(lenv *e, lval *a);
 
 /* add a function to an environment  */
 void lenv_add_builtin(lenv *e, char *name, lbuiltin func);
