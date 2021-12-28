@@ -7,12 +7,12 @@
 CC = gcc -std=c99
 
 # define any compile-time flags
-CFLAGS	:= -Wall -Wextra -g ./include/mpc.c
+CFLAGS	:= -Wall -Wextra -g
 
 # define library paths in addition to /usr/lib
 #   if I wanted to include libraries not in /usr/lib I'd specify
 #   their path using -Lpath, something like:
-LFLAGS = -ledit
+LFLAGS = -ledit ./include/mpc.c
 
 # define output directory
 OUTPUT	:= output
